@@ -38,4 +38,4 @@ jobs:
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git add .
           git commit -m "feat: data refresh"
-          git push origin main
+          git push origin master
