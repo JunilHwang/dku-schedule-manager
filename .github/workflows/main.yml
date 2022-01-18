@@ -39,5 +39,5 @@ jobs:
           git config --global user.email 'junil.h@kakao.com'
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git add .
-          git commit -m "feat: data refresh"
+          git commit -m 'feat: data refresh'
           git push -u origin master
