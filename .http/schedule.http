@@ -1,9 +1,16 @@
-### 2021년 2학기 교양검색
+### 2021년 2학기 죽전 교양과목
 POST https://webinfo.dankook.ac.kr/tiac/univ/lssn/lpci/views/lssnPopup/tmtbl.do
 Content-Type: application/x-www-form-urlencoded
 Accept: application/json
 
 yy=2021&semCd=2&qrySxn=2&curiCparCd=&lesnPlcCd=1&mjSubjKnm=&mjDowCd=&grade=&pfltNm=
+
+### 2021년 2학기 천안 교양과목
+POST https://webinfo.dankook.ac.kr/tiac/univ/lssn/lpci/views/lssnPopup/tmtbl.do
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+yy=2021&semCd=2&qrySxn=2&curiCparCd=&lesnPlcCd=2&mjSubjKnm=&mjDowCd=&grade=&pfltNm=
 
 ### 2021년 2학기 교양검색 - 공통교양
 POST https://webinfo.dankook.ac.kr/tiac/univ/lssn/lpci/views/lssnPopup/tmtbl.do
