@@ -12,7 +12,12 @@ export class AppService {
   private readonly scheduleClient: AxiosInstance;
 
   constructor() {
-    this.fetchSchedule();
+    const scheduleClient = axios.create({
+      baseURL: 'https://webinfo.dankook.ac.kr',
+    })
+    scheduleClient.interceptors.response.use(({ data }) => data);
+
+    this.scheduleClient = scheduleClient;
   }
 
   getHello(): string {
@@ -34,9 +39,9 @@ export class AppService {
       .map(([k, v]) => `${k}=${v || ''}`)
       .join('&');
     const url =
-      'https://webinfo.dankook.ac.kr/tiac/univ/lssn/lpci/views/lssnPopup/tmtbl.do';
-    const { data } = await axios.post(url, payload, { headers });
-    const { lctTmtblDscMjList } = data as ScheduleResponse;
+      '/tiac/univ/lssn/lpci/views/lssnPopup/tmtbl.do';
+    const data: ScheduleResponse = await this.scheduleClient.post(url, payload, { headers });
+    const { lctTmtblDscMjList } = data;
 
     const keys = Object.keys(lctTmtblDscMjList[0]);
 
