@@ -24,7 +24,7 @@ function getDataPath(payload: SchedulePayload): string {
     payload.lectureType,
     payload.campusType,
   ].join("-");
-  return `/data/${filename}.json`;
+  return `./data/${filename}.json`;
 }
 
 const cache: Record<string, Lecture[]> = {};
