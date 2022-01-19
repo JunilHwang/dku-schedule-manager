@@ -35,9 +35,9 @@ jobs:
           yarn build
           yarn start:prod
           cd ../..
-          git config --global user.name 'junilhwang'
-          git config --global user.email 'junil.h@kakao.com'
-          git add .
-          git commit -am 'feat: data refresh'
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git push -u origin master
+      - uses: EndBug/add-and-commit@v7
+        with:
+          author_name: JunilHwang
+          author_email: junil.h@kakao.com
+          branch: master
+          message: 'feat: data refresh'
