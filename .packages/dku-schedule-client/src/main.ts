@@ -8,7 +8,7 @@ import App from "./App.vue";
 
 import { scheduleService } from "./services";
 
-scheduleService.getSchedules();
+scheduleService.loadSchedules();
 
 createApp(App)
   .use(ElementPlus, {
