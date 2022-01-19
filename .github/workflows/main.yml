@@ -21,23 +21,25 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@master
         with:
           ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v2
       - uses: zcong1993/setup-timezone@master
         with:
           timezone: Asia/Seoul
-      - name: npm install, build, and test
+      - name: Data Save
         run: |
           cd .packages/dku-schedule-cralwer
           yarn install
           yarn build
           yarn start:prod
           cd ../..
-      - uses: EndBug/add-and-commit@v7
+      - name: Commit And Push
+        uses: actions-js/push@master
         with:
-          author_name: JunilHwang
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           author_email: junil.h@kakao.com
+          author_name: JunilHwang
           branch: master
-          message: 'feat: data refresh'
+          
