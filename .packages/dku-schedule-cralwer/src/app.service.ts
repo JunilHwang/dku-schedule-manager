@@ -1,17 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import axios, { AxiosInstance } from 'axios';
-import { Lecture, ScheduleResponse } from './ScheduleTypes';
-import * as fs from 'fs';
-import * as path from 'path';
+import { Injectable } from "@nestjs/common";
+import axios, { AxiosInstance } from "axios";
+import { Lecture, ScheduleResponse } from "./ScheduleTypes";
+import * as fs from "fs";
+import * as path from "path";
 
 const headers = {
-  'content-type': 'application/x-www-form-urlencoded',
-  accept: 'application/json',
+  "content-type": "application/x-www-form-urlencoded",
+  accept: "application/json",
 };
 
 const enum LectureType {
-  LIBERAL_ARTS = 'liberal-arts',
-  MAJORS = 'majors',
+  LIBERAL_ARTS = "liberal-arts",
+  MAJORS = "majors",
 }
 
 interface PayloadBody {
@@ -22,7 +22,7 @@ interface PayloadBody {
 }
 
 function getPayloadKey({ yy, semCd, qrySxn, lesnPlcCd }: PayloadBody) {
-  const campus = lesnPlcCd === 1 ? 'Jukjeon' : 'Cheonan';
+  const campus = lesnPlcCd === 1 ? "Jukjeon" : "Cheonan";
   const lectureTypes = [
     undefined,
     LectureType.MAJORS,
@@ -79,6 +79,18 @@ const payloadMap = parsePayloadToMap([
     qrySxn: 1,
     lesnPlcCd: 2,
   },
+  {
+    yy: 2022,
+    semCd: 1,
+    qrySxn: 2,
+    lesnPlcCd: 1,
+  },
+  {
+    yy: 2022,
+    semCd: 1,
+    qrySxn: 2,
+    lesnPlcCd: 2,
+  },
 ]);
 
 @Injectable()
@@ -87,7 +99,7 @@ export class AppService {
 
   constructor() {
     const scheduleClient = axios.create({
-      baseURL: 'https://webinfo.dankook.ac.kr',
+      baseURL: "https://webinfo.dankook.ac.kr",
     });
     scheduleClient.interceptors.response.use(({ data }) => data);
 
@@ -95,24 +107,24 @@ export class AppService {
   }
 
   public async saveSchedule() {
-    const dataPath = path.join(process.env.INIT_CWD, '../../data');
+    const dataPath = path.join(process.env.INIT_CWD, "../../data");
 
     for (const [filename, payload] of Object.entries(payloadMap)) {
       const lectures: Lecture[] = await this.fetchSchedule(payload);
       fs.writeFileSync(
         `${dataPath}/${filename}`,
         JSON.stringify(lectures),
-        'utf-8',
+        "utf-8",
       );
     }
   }
 
   public async fetchSchedule(payload: PayloadBody): Promise<Lecture[]> {
     const { scheduleClient } = this;
-    const url = '/tiac/univ/lssn/lpci/views/lssnPopup/tmtbl.do';
+    const url = "/tiac/univ/lssn/lpci/views/lssnPopup/tmtbl.do";
     const data = Object.entries(payload)
       .map(([k, v]) => `${k}=${v}`)
-      .join('&');
+      .join("&");
     const config = { headers };
 
     const response: ScheduleResponse = await scheduleClient.post(
