@@ -29,13 +29,22 @@ function getDataPath(payload: SchedulePayload): string {
 
 const cache: Record<string, Lecture[]> = {};
 
+
+async function _fetchData (
+  path: string
+): Promise<Lecture[]> {
+  if (import.meta.env.PROD) {
+    return fetch(path).then(res => res.json());
+  }
+  return import(path).then(v => v.default as Lecture[])
+}
+
 export async function getSchedules(
   payload: SchedulePayload
 ): Promise<Lecture[]> {
   const path = getDataPath(payload);
   if (!cache[path]) {
-    const result = await import(getDataPath(payload));
-    cache[path] = result.default as Lecture[];
+    cache[path] = await _fetchData(getDataPath(payload));
   }
   return cache[path];
 }
