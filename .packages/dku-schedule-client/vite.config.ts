@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      "./data": path.resolve(process.cwd(), "../../data")
+      "/data": path.resolve(process.cwd(), "../../data")
     },
   },
   server: {

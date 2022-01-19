@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { scheduleService } from "../../services";
+
 const 초 = 1000;
 const 분 = 60 * 초;
 
@@ -23,6 +25,31 @@ const times = [
     .map(v => `${parseHnM(v)}~${parseHnM(v + 50 * 분)}`),
 
 ];
+
+async function findSchedule (
+  day: string,
+  timeKey: number,
+) {
+  const schedules = await scheduleService.getAllSchedules(2021, 2);
+  // console.log([ ...new Set(schedules.map(({ buldAndRoomCont }) => buldAndRoomCont)) ]);
+
+  const selected = schedules.filter(({ buldAndRoomCont }) => {
+    if (!buldAndRoomCont) return false;
+    return buldAndRoomCont
+              .split("<p>")
+              .filter(v => v.includes(day))
+              .map(v => v.replace(/^([가-힣])(\d+(~\d+)?)(.*)/, "$2"))
+              .map(v => {
+                const [start, end] = v.split("~").map(Number);
+                if (end === undefined) return [ start ];
+                return Array(end - start + 1).fill(start).map((v, k) => v + k);
+              })
+              .flatMap(v => v)
+              .includes(timeKey)
+  })
+
+  console.log({ day, timeKey, selected })
+}
 </script>
 
 <template>
@@ -46,13 +73,16 @@ const times = [
         {{ time }}
       </li>
     </ul>
-    <ul v-for="(day, key) in days" :key="day">
+    <ul
+      v-for="(day, key) in days"
+      :key="day"
+      class="instance"
+    >
       <li
         v-for="(time, timeKey) in times"
         :class="{ late: timeKey > 17 }"
-      >
-
-      </li>
+        @click="findSchedule(day, timeKey + 1)"
+      />
     </ul>
   </div>
 </template>
@@ -112,6 +142,17 @@ header {
         &.late {
           background: #ddd;
         }
+      }
+    }
+
+    &.instance {
+      li {
+        cursor: pointer;
+
+        &:hover {
+          background: #FFA;
+        }
+
       }
     }
   }

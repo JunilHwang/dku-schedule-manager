@@ -24,7 +24,7 @@ function getDataPath(payload: SchedulePayload): string {
     payload.lectureType,
     payload.campusType,
   ].join("-");
-  return `./data/${filename}.json`;
+  return `/data/${filename}.json`;
 }
 
 const cache: Record<string, Lecture[]> = {};
@@ -34,9 +34,9 @@ async function _fetchData (
   path: string
 ): Promise<Lecture[]> {
   if (import.meta.env.PROD) {
-    return fetch(path).then(res => res.json());
+    return fetch(`.${path}`).then(res => res.json());
   }
-  return import(path).then(v => v.default as Lecture[])
+  return import(/* @vite-ignore */path).then(v => v.default as Lecture[])
 }
 
 export async function getSchedules(
