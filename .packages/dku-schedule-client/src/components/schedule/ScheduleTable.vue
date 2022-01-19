@@ -23,8 +23,6 @@ const times = [
     .map(v => `${parseHnM(v)}~${parseHnM(v + 50 * 분)}`),
 
 ];
-
-console.log(times);
 </script>
 
 <template>

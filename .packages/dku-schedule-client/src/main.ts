@@ -6,6 +6,9 @@ import "./styles/reset.scss";
 import ko from "element-plus/es/locale/lang/ko";
 import App from "./App.vue";
 
+import { scheduleService } from "./services";
+
+scheduleService.getSchedules();
 
 createApp(App)
   .use(ElementPlus, {
