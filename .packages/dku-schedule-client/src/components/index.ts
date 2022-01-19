@@ -1,1 +1,2 @@
-export { default as ScheduleTable } from "./ScheduleTable.vue";
+export * from "./backup";
+export * from "./schedule";

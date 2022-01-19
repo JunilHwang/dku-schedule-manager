@@ -25,7 +25,7 @@
   resolved "https://registry.yarnpkg.com/@ctrl/tinycolor/-/tinycolor-3.4.0.tgz#c3c5ae543c897caa9c2a68630bed355be5f9990f"
   integrity sha512-JZButFdZ1+/xAfpguQHoabIXkcqRRKpMrWKBkpEZZyxfY9C1DpADFB8PEqGSTeFr135SaTRfKqGKx5xSCLI7ZQ==
 
-"@element-plus/icons-vue@^0.2.4":
+"@element-plus/icons-vue@^0.2.4", "@element-plus/icons-vue@^0.2.5":
   version "0.2.5"
   resolved "https://registry.yarnpkg.com/@element-plus/icons-vue/-/icons-vue-0.2.5.tgz#0ac0f9a885da2d9811f8c871f00cad7819aec7d1"
   integrity sha512-ehdyhMwKOg2wwXrjSeU5uQEON4Dhf/4ao4TaVyQSLh6qjPDOeb85uNL89cUU0pYu81Tlmo/oe9leqc5uXMVnEw==
