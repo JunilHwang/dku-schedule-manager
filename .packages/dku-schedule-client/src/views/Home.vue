@@ -1,13 +1,5 @@
 <script lang="ts" setup>
-import {
-  computed,
-  ComputedRef,
-  nextTick,
-  reactive,
-  Ref,
-  ref,
-  watchEffect,
-} from "vue";
+import { computed, ComputedRef, reactive, Ref, ref, watchEffect } from "vue";
 import { useRoute } from "vue-router";
 
 import { Lecture, scheduleService } from "@/services";
@@ -25,29 +17,86 @@ const semester: ComputedRef<number> = computed(() =>
 );
 
 const searching = ref(true);
-const searchOptions = reactive({
+
+interface SearchOptions {
+  days: string[];
+  times: number[];
+  query: string;
+  grades: number[];
+  majors: string[];
+  page: 1;
+  lectures: Lecture[];
+}
+
+const searchOptions = reactive<SearchOptions>({
   days: [],
   times: [],
-  subject: null,
-  grade: [],
+  query: "",
+  grades: [],
   majors: [],
+  page: 1,
+  lectures: [],
 });
 
 const $table = ref(null);
 const $main = ref(null);
 
-const page: Ref<number> = ref(1);
-const pageSize = 100;
-const lectures: Ref<Lecture[]> = ref([]);
-const currentLectures: ComputedRef<Lecture[]> = computed(() =>
-  lectures.value.slice(0, page.value * pageSize)
-);
+const pageSize = 50;
+const currentLectures: ComputedRef<Lecture[]> = computed(() => {
+  const { page, grades, lectures, days, times, query } = searchOptions;
+  const goal = page * pageSize;
+  const arr = [];
+
+  for (const lecture of lectures) {
+    if (arr.length >= goal) break;
+    const { grade, buldAndRoomCont, subjKnm } = lecture;
+
+    if (query.length !== 0 && !subjKnm.includes(query)) {
+      continue;
+    }
+
+    if (grades.length !== 0 && !grades.includes(grade)) {
+      continue;
+    }
+
+    if (
+      days.length !== 0 &&
+      buldAndRoomCont &&
+      days.filter((day) => buldAndRoomCont.includes(day)).length === 0
+    ) {
+      continue;
+    }
+
+    if (
+      times.length !== 0 &&
+      times.filter((timeKey) =>
+        buldAndRoomCont
+          .split("<p>")
+          .map((v) => v.replace(/^([가-힣])(\d+(~\d+)?)(.*)/, "$2"))
+          .map((v) => {
+            const [start, end] = v.split("~").map(Number);
+            if (end === undefined) return [start];
+            return Array(end - start + 1)
+              .fill(start)
+              .map((v, k) => v + k);
+          })
+          .flatMap((v) => v)
+          .includes(timeKey)
+      ).length === 0
+    ) {
+      continue;
+    }
+
+    arr.push(lecture);
+  }
+  return arr;
+});
 const majors: ComputedRef<string[]> = computed(() => [
-  ...new Set(lectures.value.map(({ tkcrsEcaOrgnm }) => tkcrsEcaOrgnm)),
+  ...new Set(searchOptions.lectures.map(({ tkcrsEcaOrgnm }) => tkcrsEcaOrgnm)),
 ]);
 
 scheduleService.getAllSchedules(year.value, semester.value).then((value) => {
-  lectures.value = value;
+  searchOptions.lectures = value;
 });
 
 watchEffect(() => {
@@ -58,7 +107,7 @@ watchEffect(() => {
     .addEventListener("scroll", ({ target }: { target: HTMLElement }) => {
       const { scrollHeight, clientHeight, scrollTop } = target;
       if (scrollHeight - scrollTop - clientHeight > 500) return;
-      page.value += 1;
+      searchOptions.page += 1;
     });
 });
 </script>
@@ -71,7 +120,7 @@ watchEffect(() => {
     <el-dialog v-model="searching" title="시간표 검색" width="900px">
       <el-form label-width="70px">
         <el-form-item label="학년선택" size="small">
-          <el-checkbox-group v-model="searchOptions.grade">
+          <el-checkbox-group v-model="searchOptions.grades">
             <el-checkbox-button
               v-for="grade in [1, 2, 3, 4, 5, 6]"
               :key="grade"
@@ -116,7 +165,7 @@ watchEffect(() => {
         </el-form-item>
 
         <el-form-item label="수업명" size="small">
-          <el-input v-model="searchOptions.subject" />
+          <el-input v-model="searchOptions.query" />
         </el-form-item>
       </el-form>
 

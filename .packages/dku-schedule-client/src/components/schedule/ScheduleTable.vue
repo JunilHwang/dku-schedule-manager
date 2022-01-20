@@ -17,22 +17,6 @@ async function findSchedule(day: string, timeKey: number) {
     year.value,
     semester.value
   );
-  const selected = schedules.filter(({ buldAndRoomCont }) => {
-    if (!buldAndRoomCont) return false;
-    return buldAndRoomCont
-      .split("<p>")
-      .filter((v) => v.includes(day))
-      .map((v) => v.replace(/^([가-힣])(\d+(~\d+)?)(.*)/, "$2"))
-      .map((v) => {
-        const [start, end] = v.split("~").map(Number);
-        if (end === undefined) return [start];
-        return Array(end - start + 1)
-          .fill(start)
-          .map((v, k) => v + k);
-      })
-      .flatMap((v) => v)
-      .includes(timeKey);
-  });
 }
 </script>
 
