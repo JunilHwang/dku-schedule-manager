@@ -1,17 +1,9 @@
 <script setup lang="ts">
+import { toRefs } from "vue";
+
+import { fill2 } from "../../utils";
+import { days, times } from "../../properties";
 import { scheduleService } from "../../services";
-import { useRoute } from "vue-router";
-import { computed, ComputedRef, toRefs } from "vue";
-
-const 초 = 1000;
-const 분 = 60 * 초;
-
-const fill2 = (n: number) => `0${n}`.substr(-2);
-
-const parseHnM = (current: number) => {
-  const date = new Date(current);
-  return `${fill2(date.getHours())}:${fill2(date.getMinutes())}`;
-};
 
 const props = defineProps({
   year: { type: Number, required: true },
@@ -19,19 +11,6 @@ const props = defineProps({
 });
 
 const { year, semester } = toRefs(props);
-
-const days = ["월", "화", "수", "목", "금", "토"];
-const times = [
-  ...Array(18)
-    .fill(0)
-    .map((v, k) => v + k * 30 * 분)
-    .map((v) => `${parseHnM(v)}~${parseHnM(v + 30 * 분)}`),
-
-  ...Array(6)
-    .fill(18 * 30 * 분)
-    .map((v, k) => v + k * 55 * 분)
-    .map((v) => `${parseHnM(v)}~${parseHnM(v + 50 * 분)}`),
-];
 
 async function findSchedule(day: string, timeKey: number) {
   const schedules = await scheduleService.getAllSchedules(
