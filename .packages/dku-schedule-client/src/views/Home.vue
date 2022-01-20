@@ -2,7 +2,7 @@
 import {
   computed,
   ComputedRef,
-  onMounted,
+  nextTick,
   reactive,
   Ref,
   ref,
@@ -11,9 +11,8 @@ import {
 import { useRoute } from "vue-router";
 
 import { Lecture, scheduleService } from "@/services";
-import { ScheduleTable, ScheduleController } from "@/components";
+import { ScheduleController, ScheduleTable } from "@/components";
 import { days, times } from "@/properties";
-import { throttle } from "@/utils";
 
 const route = useRoute();
 
@@ -36,23 +35,19 @@ const searchOptions = reactive({
 
 const $table = ref(null);
 const $main = ref(null);
-const lectures: Ref<Lecture[]> = ref([]);
-const currentLectures: Ref<Lecture[]> = ref([]);
-const page: Ref<number> = ref(0);
-const majors: Ref<string[]> = ref([]);
-const pageSize = 100;
 
-const fetchNextSchedules = () => {
-  const start = page.value * pageSize;
-  currentLectures.value.push(...lectures.value.slice(start, start + pageSize));
-  page.value += 1;
-};
+const page: Ref<number> = ref(1);
+const pageSize = 100;
+const lectures: Ref<Lecture[]> = ref([]);
+const currentLectures: ComputedRef<Lecture[]> = computed(() =>
+  lectures.value.slice(0, page.value * pageSize)
+);
+const majors: ComputedRef<string[]> = computed(() => [
+  ...new Set(lectures.value.map(({ tkcrsEcaOrgnm }) => tkcrsEcaOrgnm)),
+]);
 
 scheduleService.getAllSchedules(year.value, semester.value).then((value) => {
-  page.value = 0;
   lectures.value = value;
-  currentLectures.value = value.slice(0, pageSize);
-  majors.value = [...new Set(value.map(({ tkcrsEcaOrgnm }) => tkcrsEcaOrgnm))];
 });
 
 watchEffect(() => {
@@ -63,7 +58,7 @@ watchEffect(() => {
     .addEventListener("scroll", ({ target }: { target: HTMLElement }) => {
       const { scrollHeight, clientHeight, scrollTop } = target;
       if (scrollHeight - scrollTop - clientHeight > 500) return;
-      fetchNextSchedules();
+      page.value += 1;
     });
 });
 </script>
