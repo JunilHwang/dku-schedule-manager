@@ -7,7 +7,7 @@ import ko from "element-plus/es/locale/lang/ko";
 import App from "./App.vue";
 import { router } from "./router";
 
-createApp(App)
+const app = createApp(App)
   .use(ElementPlus, { locale: ko })
   .use(router)
-  .mount("#app", true);
+  .mount("#app");
