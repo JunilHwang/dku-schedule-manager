@@ -1,22 +1,45 @@
 <script setup lang="ts">
 import { toRefs } from "vue";
+import { ElMessageBox, ElMessage } from "element-plus";
 
 import { fill2 } from "@/utils";
 import { days, times } from "@/properties";
-import { scheduleService } from "@/services";
+import { Lecture, Schedule } from "@/services";
 
-const props = defineProps({
-  year: { type: Number, required: true },
-  semester: { type: Number, required: true },
-});
+const props = defineProps<{
+  schedules: Schedule[];
+}>();
 
-const { year, semester } = toRefs(props);
+const { schedules } = toRefs(props);
+const emit = defineEmits(["select", "remove"]);
 
-async function findSchedule(day: string, timeKey: number) {
-  const schedules = await scheduleService.getAllSchedules(
-    year.value,
-    semester.value
+function getSchedule(day: number, time: number): Schedule | undefined {
+  return schedules.value.find(
+    ({ dayIndex, range }) => dayIndex === day && range.includes(time)
   );
+}
+
+function getLecture(day: number, time: number): Lecture[] {
+  const selected = getSchedule(day, time);
+  return [selected?.lecture].filter(Boolean) as Lecture[];
+}
+
+function removeSchedule(day: number, time: number) {
+  const selected = getSchedule(day, time)!;
+  ElMessageBox.confirm(
+    `시간표에서 ${selected.lecture.subjKnm}를 삭제하시겠습니까?`,
+    "삭제",
+    {
+      confirmButtonText: "삭제",
+      cancelButtonText: "취소",
+      type: "warning",
+    }
+  )
+    .then(() => {
+      emit("remove", selected);
+      ElMessage.success("삭제되었습니다.");
+    })
+    .catch(() => ElMessage.info("취소되었습니다."));
 }
 </script>
 
@@ -42,8 +65,22 @@ async function findSchedule(day: string, timeKey: number) {
       <li
         v-for="(time, timeKey) in times"
         :class="{ late: timeKey > 17 }"
-        @click="findSchedule(day, timeKey + 1)"
-      />
+        @click="emit('select', day, timeKey + 1)"
+      >
+        <div
+          v-for="(lecture, lectureKey) in getLecture(key, timeKey + 1)"
+          :key="lectureKey"
+          @click.stop="removeSchedule(key, timeKey + 1)"
+        >
+          <p>
+            <template v-if="lecture.cybLtrTyNm">
+              {{ lecture.cybLtrTyNm }}
+            </template>
+            {{ lecture.subjKnm }}<br />
+            [{{ lecture.wkLecrEmpnm }}]
+          </p>
+        </div>
+      </li>
     </ul>
   </div>
 </template>
@@ -108,6 +145,16 @@ header {
     &.instance {
       li {
         cursor: pointer;
+        font-size: 11px;
+
+        > div {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+        }
 
         &:hover {
           background: #ffa;
@@ -117,7 +164,7 @@ header {
   }
 
   li {
-    height: 40px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;

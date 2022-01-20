@@ -1,4 +1,4 @@
-export type RemoteType = '원격수업' | '대면수업';
+export type RemoteType = "원격수업" | "대면수업";
 
 export interface Lecture {
   buldAndRoomCont: string; // "목7~12"
@@ -30,4 +30,10 @@ export interface Lecture {
   semCd: string; // "2"
   oglngLctLanggCd: string; // "0011"
   checked: string; // "0"
+}
+
+export interface Schedule {
+  lecture: Lecture;
+  dayIndex: number;
+  range: number[];
 }

@@ -2,9 +2,10 @@
 import { computed, ComputedRef, reactive, Ref, ref, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { Lecture, scheduleService } from "@/services";
+import { Lecture, Schedule, scheduleService } from "@/services";
 import { ScheduleController, ScheduleTable } from "@/components";
 import { days, times } from "@/properties";
+import { ElMessage } from "element-plus";
 
 const route = useRoute();
 const router = useRouter();
@@ -19,7 +20,29 @@ const semester: ComputedRef<number> = computed(() =>
 
 const searching = ref(false);
 
-const schedules: Ref<Lecture[]> = ref([]);
+const myLectures: Ref<Lecture[]> = ref([]);
+
+const lectureToSchedule = (lecture: Lecture) =>
+  lecture.buldAndRoomCont.split("<p>").map((time) => ({
+    lecture,
+    dayIndex: days.findIndex((day) => time.includes(day)),
+    range: [time.replace(/^([가-힣])(\d+(~\d+)?)(.*)/, "$2")].map((v) => {
+      const [start, end] = v.split("~").map(Number);
+      if (end === undefined) return [start];
+      return Array(end - start + 1)
+        .fill(start)
+        .map((v, k) => v + k);
+    })[0] as number[],
+  }));
+
+const schedules = computed(() => {
+  return myLectures.value
+    .filter(({ buldAndRoomCont }) => Boolean(buldAndRoomCont))
+    .filter(({ buldAndRoomCont }) =>
+      days.filter((day) => buldAndRoomCont.includes(day))
+    )
+    .flatMap(lectureToSchedule);
+});
 
 interface SearchOptions {
   days: string[];
@@ -70,10 +93,15 @@ async function fetchLectures() {
   fetchNextData();
 }
 
+function openSearch() {
+  searching.value = true;
+}
+
 function handleSelectDayAndTime(day: string, timeKey: number) {
   searchOptions.days = [day];
   searchOptions.times = [timeKey];
-  searching.value = true;
+  openSearch();
+  requestAnimationFrame(handleSearchOptionChange);
 }
 
 function handleSelectSemester(value: string) {
@@ -92,7 +120,28 @@ function handleSearchOptionChange() {
 }
 
 function handleSelectLecture(lecture: Lecture) {
-  schedules.value.push(lecture);
+  const schedule = lectureToSchedule(lecture);
+  const duplicated = schedules.value.find(({ range, dayIndex }) => {
+    return schedule.find((v) => {
+      return (
+        v.dayIndex === dayIndex && v.range.find((time) => range.includes(time))
+      );
+    });
+  });
+
+  if (duplicated) {
+    return ElMessage.error(
+      `${duplicated.lecture.subjKnm} 수업과 강의 시간이 겹칩니다.`
+    );
+  }
+
+  myLectures.value.push(lecture);
+  searching.value = false;
+}
+
+function handleRemoveSchedule(schedule: Schedule) {
+  const index = myLectures.value.indexOf(schedule.lecture);
+  myLectures.value.splice(index, 1);
 }
 
 function fetchNextData() {
@@ -173,12 +222,14 @@ watchEffect(() => {
     <schedule-table
       :schedules="schedules"
       @select="handleSelectDayAndTime"
+      @remove="handleRemoveSchedule"
     />
 
     <schedule-controller
       :year="year"
       :semester="semester"
       @select-semester="handleSelectSemester"
+      @search="openSearch"
     />
 
     <el-dialog v-model="searching" title="시간표 검색" width="900px">

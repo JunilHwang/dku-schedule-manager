@@ -16,18 +16,20 @@ const conditions = [
   { label: "2021년 2학기", value: "2021-2" },
 ];
 
-const emit = defineEmits(['select-semester']);
+const emit = defineEmits(["select-semester", "search"]);
 </script>
 
 <template>
   <div class="controller">
     <el-button-group>
-      <el-button :icon="Search" round plain> 검색</el-button>
+      <el-button :icon="Search" @click="emit('search')" round plain>
+        검색
+      </el-button>
       <el-button
         v-for="{ label, value } in conditions"
         :type="value === condition ? 'primary' : 'default'"
-        round
         @click="emit('select-semester', value)"
+        round
       >
         {{ label }}
       </el-button>
