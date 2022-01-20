@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { toRefs } from "vue";
 
-import { fill2 } from "../../utils";
-import { days, times } from "../../properties";
-import { scheduleService } from "../../services";
+import { fill2 } from "@/utils";
+import { days, times } from "@/properties";
+import { scheduleService } from "@/services";
 
 const props = defineProps({
   year: { type: Number, required: true },

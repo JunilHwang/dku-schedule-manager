@@ -5,11 +5,7 @@ import "./styles/reset.scss";
 
 import ko from "element-plus/es/locale/lang/ko";
 import App from "./App.vue";
-
-import { scheduleService } from "./services";
 import { router } from "./router";
-
-scheduleService.loadSchedules();
 
 createApp(App)
   .use(ElementPlus, { locale: ko })
