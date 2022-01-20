@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import { computed, ComputedRef, reactive, Ref, ref, watchEffect } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import { Lecture, scheduleService } from "@/services";
 import { ScheduleController, ScheduleTable } from "@/components";
 import { days, times } from "@/properties";
 
 const route = useRoute();
+const router = useRouter();
 
 const year: ComputedRef<number> = computed(() =>
   Number(route.query.year || 2022)
@@ -16,7 +17,9 @@ const semester: ComputedRef<number> = computed(() =>
   Number(route.query.semester || 1)
 );
 
-const searching = ref(true);
+const searching = ref(false);
+
+const schedules: Ref<Lecture[]> = ref([]);
 
 interface SearchOptions {
   days: string[];
@@ -24,8 +27,10 @@ interface SearchOptions {
   query: string;
   grades: number[];
   majors: string[];
-  page: 1;
+  page: number;
+  cursor: number;
   lectures: Lecture[];
+  currentLectures: Lecture[];
 }
 
 const searchOptions = reactive<SearchOptions>({
@@ -34,28 +39,84 @@ const searchOptions = reactive<SearchOptions>({
   query: "",
   grades: [],
   majors: [],
-  page: 1,
+  page: 0,
+  cursor: 0,
   lectures: [],
+  currentLectures: [],
 });
 
 const $table = ref(null);
 const $main = ref(null);
 
 const pageSize = 50;
-const currentLectures: ComputedRef<Lecture[]> = computed(() => {
-  const { page, grades, lectures, days, times, query } = searchOptions;
-  const goal = page * pageSize;
-  const arr = [];
 
-  for (const lecture of lectures) {
-    if (arr.length >= goal) break;
-    const { grade, buldAndRoomCont, subjKnm } = lecture;
+const majors: ComputedRef<string[]> = computed(() => [
+  ...new Set(searchOptions.lectures.map(({ tkcrsEcaOrgnm }) => tkcrsEcaOrgnm)),
+]);
+
+async function fetchLectures() {
+  searchOptions.lectures = await scheduleService.getAllSchedules(
+    year.value,
+    semester.value
+  );
+  searchOptions.days = [];
+  searchOptions.times = [];
+  searchOptions.query = "";
+  searchOptions.grades = [];
+  searchOptions.majors = [];
+  searchOptions.page = 0;
+  searchOptions.cursor = 0;
+  searchOptions.currentLectures = [];
+  fetchNextData();
+}
+
+function handleSelectDayAndTime(day: string, timeKey: number) {
+  searchOptions.days = [day];
+  searchOptions.times = [timeKey];
+  searching.value = true;
+}
+
+function handleSelectSemester(value: string) {
+  const [year, semester] = value.split("-");
+  router.push({
+    query: { year, semester },
+  });
+  requestAnimationFrame(fetchLectures);
+}
+
+function handleSearchOptionChange() {
+  searchOptions.currentLectures = [];
+  searchOptions.page = 0;
+  searchOptions.cursor = 0;
+  requestAnimationFrame(fetchNextData);
+}
+
+function handleSelectLecture(lecture: Lecture) {
+  schedules.value.push(lecture);
+}
+
+function fetchNextData() {
+  const { grades, lectures, days, times, query, currentLectures, majors } =
+    searchOptions;
+
+  searchOptions.page += 1;
+  const arr = [];
+  let cursor = searchOptions.cursor;
+
+  for (; cursor < lectures.length; cursor += 1) {
+    if (arr.length >= pageSize) break;
+    const lecture = lectures[cursor];
+    const { grade, buldAndRoomCont, subjKnm, tkcrsEcaOrgnm } = lecture;
 
     if (query.length !== 0 && !subjKnm.includes(query)) {
       continue;
     }
 
     if (grades.length !== 0 && !grades.includes(grade)) {
+      continue;
+    }
+
+    if (majors.length !== 0 && !majors.includes(tkcrsEcaOrgnm)) {
       continue;
     }
 
@@ -70,7 +131,7 @@ const currentLectures: ComputedRef<Lecture[]> = computed(() => {
     if (
       times.length !== 0 &&
       times.filter((timeKey) =>
-        buldAndRoomCont
+        (buldAndRoomCont || "")
           .split("<p>")
           .map((v) => v.replace(/^([가-힣])(\d+(~\d+)?)(.*)/, "$2"))
           .map((v) => {
@@ -86,18 +147,13 @@ const currentLectures: ComputedRef<Lecture[]> = computed(() => {
     ) {
       continue;
     }
-
     arr.push(lecture);
   }
-  return arr;
-});
-const majors: ComputedRef<string[]> = computed(() => [
-  ...new Set(searchOptions.lectures.map(({ tkcrsEcaOrgnm }) => tkcrsEcaOrgnm)),
-]);
+  searchOptions.cursor = cursor;
+  currentLectures.push(...arr);
+}
 
-scheduleService.getAllSchedules(year.value, semester.value).then((value) => {
-  searchOptions.lectures = value;
-});
+fetchLectures();
 
 watchEffect(() => {
   if (!$table.value) return;
@@ -107,18 +163,26 @@ watchEffect(() => {
     .addEventListener("scroll", ({ target }: { target: HTMLElement }) => {
       const { scrollHeight, clientHeight, scrollTop } = target;
       if (scrollHeight - scrollTop - clientHeight > 500) return;
-      searchOptions.page += 1;
+      fetchNextData();
     });
 });
 </script>
 
 <template>
   <main ref="$main">
-    <schedule-table :year="year" :semester="semester" />
-    <schedule-controller :year="year" :semester="semester" />
+    <schedule-table
+      :schedules="schedules"
+      @select="handleSelectDayAndTime"
+    />
+
+    <schedule-controller
+      :year="year"
+      :semester="semester"
+      @select-semester="handleSelectSemester"
+    />
 
     <el-dialog v-model="searching" title="시간표 검색" width="900px">
-      <el-form label-width="70px">
+      <el-form label-width="70px" @change="handleSearchOptionChange">
         <el-form-item label="학년선택" size="small">
           <el-checkbox-group v-model="searchOptions.grades">
             <el-checkbox-button
@@ -145,6 +209,7 @@ watchEffect(() => {
             :options="times.map((v, k) => ({ value: k + 1, label: v }))"
             placeholder="시간을 선택해주세요"
             style="width: 400px"
+            @change="handleSearchOptionChange"
             multiple
           />
         </el-form-item>
@@ -160,6 +225,7 @@ watchEffect(() => {
             "
             placeholder="전공을 선택해주세요"
             style="width: 400px"
+            @change="handleSearchOptionChange"
             multiple
           />
         </el-form-item>
@@ -171,13 +237,14 @@ watchEffect(() => {
 
       <el-table
         ref="$table"
-        :data="currentLectures"
+        :data="searchOptions.currentLectures"
         :header-cell-style="{
           background: '#f5f5f5',
           fontSize: '11px',
         }"
         :cell-style="{ fontSize: '11px' }"
         height="300px"
+        @row-click="handleSelectLecture"
         border
       >
         <el-table-column

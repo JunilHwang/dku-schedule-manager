@@ -16,12 +16,7 @@ const conditions = [
   { label: "2021년 2학기", value: "2021-2" },
 ];
 
-const selectCondition = (value: string) => {
-  const [year, semester] = value.split("-");
-  router.push({
-    query: { year, semester },
-  });
-};
+const emit = defineEmits(['select-semester']);
 </script>
 
 <template>
@@ -32,7 +27,7 @@ const selectCondition = (value: string) => {
         v-for="{ label, value } in conditions"
         :type="value === condition ? 'primary' : 'default'"
         round
-        @click="selectCondition(value)"
+        @click="emit('select-semester', value)"
       >
         {{ label }}
       </el-button>
