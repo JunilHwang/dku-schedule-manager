@@ -1,22 +1,47 @@
 <script lang="ts" setup>
 import { Search } from "@element-plus/icons-vue";
+import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const props = defineProps({
+  year: { type: Number, required: true },
+  semester: { type: Number, required: true },
+});
+
+const condition = computed(() => `${props.year}-${props.semester}`);
+const conditions = [
+  { label: "2022년 1학기", value: "2022-1" },
+  { label: "2021년 2학기", value: "2021-2" },
+];
+
+const selectCondition = (value: string) => {
+  const [year, semester] = value.split("-");
+  router.push({
+    query: { year, semester },
+  });
+};
 </script>
 
 <template>
-  <div>
-    <el-button
-      type="primary"
-      :icon="Search"
-      round
-      plain
-    >
-      수업 목록에서 검색
-    </el-button>
+  <div class="controller">
+    <el-button-group>
+      <el-button :icon="Search" round plain> 검색</el-button>
+      <el-button
+        v-for="{ label, value } in conditions"
+        :type="value === condition ? 'primary' : 'default'"
+        round
+        @click="selectCondition(value)"
+      >
+        {{ label }}
+      </el-button>
+    </el-button-group>
   </div>
 </template>
 
 <style lang="scss" scoped>
-div {
+.controller {
   position: fixed;
   left: 0;
   right: 0;

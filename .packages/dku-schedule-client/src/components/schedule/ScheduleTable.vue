@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { scheduleService } from "../../services";
+import { useRoute } from "vue-router";
+import { computed, ComputedRef, toRefs } from "vue";
 
 const 초 = 1000;
 const 분 = 60 * 초;
@@ -11,40 +13,47 @@ const parseHnM = (current: number) => {
   return `${fill2(date.getHours())}:${fill2(date.getMinutes())}`;
 };
 
+const props = defineProps({
+  year: { type: Number, required: true },
+  semester: { type: Number, required: true },
+});
+
+const { year, semester } = toRefs(props);
+
 const days = ["월", "화", "수", "목", "금", "토"];
 const times = [
-
   ...Array(18)
     .fill(0)
-    .map((v, k) => v + (k * 30 * 분))
-    .map(v => `${parseHnM(v)}~${parseHnM(v + 30 * 분)}`),
+    .map((v, k) => v + k * 30 * 분)
+    .map((v) => `${parseHnM(v)}~${parseHnM(v + 30 * 분)}`),
 
   ...Array(6)
     .fill(18 * 30 * 분)
-    .map((v, k) => v + (k * 55 * 분))
-    .map(v => `${parseHnM(v)}~${parseHnM(v + 50 * 분)}`),
-
+    .map((v, k) => v + k * 55 * 분)
+    .map((v) => `${parseHnM(v)}~${parseHnM(v + 50 * 분)}`),
 ];
 
-async function findSchedule (
-  day: string,
-  timeKey: number,
-) {
-  const schedules = await scheduleService.getAllSchedules(2021, 2);
+async function findSchedule(day: string, timeKey: number) {
+  const schedules = await scheduleService.getAllSchedules(
+    year.value,
+    semester.value
+  );
   const selected = schedules.filter(({ buldAndRoomCont }) => {
     if (!buldAndRoomCont) return false;
     return buldAndRoomCont
-              .split("<p>")
-              .filter(v => v.includes(day))
-              .map(v => v.replace(/^([가-힣])(\d+(~\d+)?)(.*)/, "$2"))
-              .map(v => {
-                const [start, end] = v.split("~").map(Number);
-                if (end === undefined) return [ start ];
-                return Array(end - start + 1).fill(start).map((v, k) => v + k);
-              })
-              .flatMap(v => v)
-              .includes(timeKey)
-  })
+      .split("<p>")
+      .filter((v) => v.includes(day))
+      .map((v) => v.replace(/^([가-힣])(\d+(~\d+)?)(.*)/, "$2"))
+      .map((v) => {
+        const [start, end] = v.split("~").map(Number);
+        if (end === undefined) return [start];
+        return Array(end - start + 1)
+          .fill(start)
+          .map((v, k) => v + k);
+      })
+      .flatMap((v) => v)
+      .includes(timeKey);
+  });
 }
 </script>
 
@@ -61,19 +70,12 @@ async function findSchedule (
   </header>
   <div class="wrap">
     <ul class="scheduleLabels">
-      <li
-        v-for="(time, timeKey) in times"
-        :class="{ late: timeKey > 17 }"
-      >
+      <li v-for="(time, timeKey) in times" :class="{ late: timeKey > 17 }">
         {{ fill2(timeKey + 1) }}교시<br />
         {{ time }}
       </li>
     </ul>
-    <ul
-      v-for="(day, key) in days"
-      :key="day"
-      class="instance"
-    >
+    <ul v-for="(day, key) in days" :key="day" class="instance">
       <li
         v-for="(time, timeKey) in times"
         :class="{ late: timeKey > 17 }"
@@ -112,7 +114,6 @@ header {
       }
     }
   }
-
 }
 
 .wrap {
@@ -146,9 +147,8 @@ header {
         cursor: pointer;
 
         &:hover {
-          background: #FFA;
+          background: #ffa;
         }
-
       }
     }
   }
