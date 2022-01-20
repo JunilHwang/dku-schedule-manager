@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { computed, ComputedRef, reactive, Ref, ref, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
 
 import { Lecture, Schedule, scheduleService } from "@/services";
 import { ScheduleController, ScheduleTable } from "@/components";
 import { days, times } from "@/properties";
-import { ElMessage } from "element-plus";
+import { getAtStorage, saveAtStorage } from "@/utils";
 
 const route = useRoute();
 const router = useRouter();
@@ -20,7 +21,9 @@ const semester: ComputedRef<number> = computed(() =>
 
 const searching = ref(false);
 
-const myLectures: Ref<Lecture[]> = ref([]);
+const myLectures: Ref<Lecture[]> = ref(
+  getAtStorage(`${year.value}-${semester.value}`)
+);
 
 const lectureToSchedule = (lecture: Lecture) =>
   lecture.buldAndRoomCont.split("<p>").map((time) => ({
@@ -93,6 +96,10 @@ async function fetchLectures() {
   fetchNextData();
 }
 
+function save() {
+  saveAtStorage(`${year.value}-${semester.value}`, myLectures.value);
+}
+
 function openSearch() {
   searching.value = true;
 }
@@ -109,6 +116,7 @@ function handleSelectSemester(value: string) {
   router.push({
     query: { year, semester },
   });
+  myLectures.value = getAtStorage(`${year}-${semester}`);
   requestAnimationFrame(fetchLectures);
 }
 
@@ -137,11 +145,13 @@ function handleSelectLecture(lecture: Lecture) {
 
   myLectures.value.push(lecture);
   searching.value = false;
+  save();
 }
 
 function handleRemoveSchedule(schedule: Schedule) {
   const index = myLectures.value.indexOf(schedule.lecture);
   myLectures.value.splice(index, 1);
+  save();
 }
 
 function fetchNextData() {

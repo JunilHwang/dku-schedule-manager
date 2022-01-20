@@ -1,3 +1,5 @@
+import { Lecture, Schedule } from "@/services";
+
 export const fill2 = (n: number) => `0${n}`.substr(-2);
 
 export const parseHnM = (current: number) => {
@@ -15,4 +17,12 @@ export const throttle = (fn: Function, time: number) => {
       toggle = false;
     }, time);
   };
+};
+
+export const saveAtStorage = (key: string, data: Lecture[]) => {
+  localStorage.setItem(key, JSON.stringify(data));
+};
+
+export const getAtStorage = (key: string): Lecture[] => {
+  return JSON.parse(localStorage.getItem(key) || "[]");
 };
