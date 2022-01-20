@@ -31,8 +31,6 @@ async function findSchedule (
   timeKey: number,
 ) {
   const schedules = await scheduleService.getAllSchedules(2021, 2);
-  // console.log([ ...new Set(schedules.map(({ buldAndRoomCont }) => buldAndRoomCont)) ]);
-
   const selected = schedules.filter(({ buldAndRoomCont }) => {
     if (!buldAndRoomCont) return false;
     return buldAndRoomCont
@@ -47,8 +45,6 @@ async function findSchedule (
               .flatMap(v => v)
               .includes(timeKey)
   })
-
-  console.log({ day, timeKey, selected })
 }
 </script>
 
