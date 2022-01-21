@@ -41,57 +41,59 @@ const colors = ["#fdd", "#ffd", "#dff", "#ddf", "#fdf", "#dfd"];
 </script>
 
 <template>
-  <header>
-    <ul>
-      <li>
-        <span>교시</span>
-      </li>
-      <li v-for="day in days" :key="day">
-        <span v-html="day" />
-      </li>
-    </ul>
-  </header>
-  <div class="wrap">
-    <ul class="scheduleLabels">
-      <li v-for="(time, timeKey) in times" :class="{ late: timeKey > 17 }">
-        {{ fill2(timeKey + 1) }}교시<br />
-        {{ time }}
-      </li>
-    </ul>
-    <ul v-for="(day, key) in days" :key="day" class="instance">
-      <li
-        v-for="(time, timeKey) in times"
-        :class="{ late: timeKey > 17 }"
-        @click="emit('select', day, timeKey + 1)"
-      >
-        <div
-          class="inner"
-          v-for="({ lecture, range, room }, lectureKey) in [
-            getSchedule(key, timeKey + 1),
-          ].filter(Boolean)"
-          :key="lectureKey"
-          @click.stop="handleRemove"
-          :style="{
-            height: `${range.length * 100 + range.length}%`,
-            backgroundColor: getColor(lecture),
-          }"
+  <div>
+    <header>
+      <ul>
+        <li>
+          <span>교시</span>
+        </li>
+        <li v-for="day in days" :key="day">
+          <span v-html="day" />
+        </li>
+      </ul>
+    </header>
+    <div class="wrap">
+      <ul class="scheduleLabels">
+        <li v-for="(time, timeKey) in times" :class="{ late: timeKey > 17 }">
+          {{ fill2(timeKey + 1) }}교시<br />
+          {{ time }}
+        </li>
+      </ul>
+      <ul v-for="(day, key) in days" :key="day" class="instance">
+        <li
+          v-for="(time, timeKey) in times"
+          :class="{ late: timeKey > 17 }"
+          @click="emit('select', day, timeKey + 1)"
         >
-          <el-popconfirm
-            title="강의를 삭제하시겠습니까?"
-            @confirm="removeSchedule(key, timeKey + 1)"
+          <div
+            class="inner"
+            v-for="({ lecture, range, room }, lectureKey) in [
+              getSchedule(key, timeKey + 1),
+            ].filter(Boolean)"
+            :key="lectureKey"
+            @click.stop="handleRemove"
+            :style="{
+              height: `calc(${range.length * 100}% + ${range.length - 1}px)`,
+              backgroundColor: getColor(lecture),
+            }"
           >
-            <template #reference>
-              <p>
-                <strong
-                  >{{ lecture.subjKnm }}{{ lecture.cybLtrTyNm || "" }}</strong
-                ><br />
-                <strong>{{ lecture.wkLecrEmpnm }}</strong> {{ room }}
-              </p>
-            </template>
-          </el-popconfirm>
-        </div>
-      </li>
-    </ul>
+            <el-popconfirm
+              title="강의를 삭제하시겠습니까?"
+              @confirm="removeSchedule(key, timeKey + 1)"
+            >
+              <template #reference>
+                <p>
+                  <strong
+                    >{{ lecture.subjKnm }}{{ lecture.cybLtrTyNm || "" }}</strong
+                  ><br />
+                  <strong>{{ lecture.wkLecrEmpnm }}</strong> {{ room }}
+                </p>
+              </template>
+            </el-popconfirm>
+          </div>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -103,6 +105,7 @@ header {
   top: 0;
   height: 40px;
   border-bottom: 1px solid #bbb;
+  z-index: 100;
 
   .el-popup-parent--hidden & {
     right: 17px;

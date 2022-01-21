@@ -8,6 +8,7 @@ import { ScheduleController, ScheduleTable } from "@/components";
 import { Lecture, Schedule, scheduleService } from "@/services";
 import { days, times } from "@/properties";
 import { getAtStorage, saveAtStorage, lectureToSchedule } from "@/utils";
+import html2canvas from "html2canvas";
 
 const route = useRoute();
 const router = useRouter();
@@ -59,8 +60,9 @@ const searchOptions = reactive<SearchOptions>({
   currentLectures: [],
 });
 
-const $table = ref(null);
 const $main = ref(null);
+const $schedule = ref(null);
+const $table = ref(null);
 
 const pageSize = 50;
 
@@ -212,7 +214,26 @@ function handleShare() {
 }
 
 function handleDownload() {
-  console.log("handleDownload");
+  const $clone = $main.value.cloneNode(true);
+  const $cloneHeader = $clone.querySelector("header");
+  $clone.querySelector(".controller").remove();
+
+  $cloneHeader.style.cssText = "position: static; margin-bottom: -41px;";
+  $clone.style.cssText =
+    "width: 800px; position: absolute: left: -800px; top: 0;";
+  $main.value.parentNode.appendChild($clone);
+
+  html2canvas($clone, { height: $clone.scrollHeight }).then((canvas) => {
+    $clone.remove();
+    const $anchor = document.createElement("a");
+    $anchor.href = canvas.toDataURL();
+    $anchor.download = "시간표.png";
+    $anchor.click();
+    $main.value.style = "";
+  });
+  // const canvas = document.createElement("canvas");
+  // canvas.width = 600;
+  // canvas.height = window.scrollHeight;
 }
 
 fetchLectures();
@@ -233,6 +254,7 @@ watchEffect(() => {
 <template>
   <main ref="$main">
     <schedule-table
+      ref="$schedule"
       :schedules="schedules"
       @select="handleSelectDayAndTime"
       @remove="handleRemoveSchedule"
