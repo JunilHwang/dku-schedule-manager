@@ -14,7 +14,7 @@ const props = defineProps<{
 const { schedules } = toRefs(props);
 const emit = defineEmits(["select", "remove"]);
 
-function getSchedule(day: number, time: number): Schedule | undefined {
+function getSchedule(day: number, time: number): Schedule {
   return schedules.value.find(
     ({ dayIndex, range }) => dayIndex === day && range[0] === time
   );
@@ -25,7 +25,7 @@ function getColor(lecture: Lecture): string {
   return colors[lectures.indexOf(lecture) % colors.length];
 }
 
-function handleRemove({ target }: { target: HTMLElement }) {
+function handleRemove({ target }: MouseEvent) {
   const [$confirm] = Array.from(target.children) as HTMLElement[];
   if (!$confirm) return;
   $confirm.click();

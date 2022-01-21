@@ -214,6 +214,7 @@ function handleShare() {
 }
 
 function handleDownload() {
+  if ($main.value === null) return;
   const $clone = $main.value.cloneNode(true);
   const $cloneHeader = $clone.querySelector("header");
   $clone.querySelector(".controller").remove();
@@ -231,9 +232,6 @@ function handleDownload() {
     $anchor.click();
     $main.value.style = "";
   });
-  // const canvas = document.createElement("canvas");
-  // canvas.width = 600;
-  // canvas.height = window.scrollHeight;
 }
 
 fetchLectures();
