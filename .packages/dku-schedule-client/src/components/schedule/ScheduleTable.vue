@@ -1,31 +1,31 @@
 <script setup lang="ts">
-import {toRefs} from "vue";
-import {ElMessage} from "element-plus";
+import { toRefs } from "vue";
+import { ElMessage } from "element-plus";
 
-import {fill2} from "@/utils";
-import {days, times} from "@/properties";
-import {Lecture, Schedule} from "@/services";
+import { fill2 } from "@/utils";
+import { days, times } from "@/properties";
+import { Lecture, Schedule } from "@/services";
 
 const props = defineProps<{
   schedules: Schedule[];
 }>();
 
-const {schedules} = toRefs(props);
+const { schedules } = toRefs(props);
 const emit = defineEmits(["select", "remove"]);
 
 function getSchedule(day: number, time: number): Schedule | undefined {
   return schedules.value.find(
-    ({dayIndex, range}) => dayIndex === day && range[0] === time
+    ({ dayIndex, range }) => dayIndex === day && range[0] === time
   );
 }
 
 function getColor(lecture: Lecture): string {
-  const lectures = [ ...new Set(schedules.value.map(({ lecture }) => lecture)) ]
+  const lectures = [...new Set(schedules.value.map(({ lecture }) => lecture))];
   return colors[lectures.indexOf(lecture) % colors.length];
 }
 
 function handleRemove({ target }: { target: HTMLElement }) {
-  const [ $confirm ] =  Array.from(target.children) as HTMLElement[];
+  const [$confirm] = Array.from(target.children) as HTMLElement[];
   if (!$confirm) return;
   $confirm.click();
 }
@@ -36,14 +36,7 @@ function removeSchedule(day: number, time: number) {
   ElMessage.success("삭제되었습니다.");
 }
 
-const colors = [
-  '#fdd',
-  '#ffd',
-  '#dff',
-  '#ddf',
-  '#fdf',
-  '#dfd',
-]
+const colors = ["#fdd", "#ffd", "#dff", "#ddf", "#fdf", "#dfd"];
 </script>
 
 <template>
@@ -53,14 +46,14 @@ const colors = [
         <span>교시</span>
       </li>
       <li v-for="day in days" :key="day">
-        <span v-html="day"/>
+        <span v-html="day" />
       </li>
     </ul>
   </header>
   <div class="wrap">
     <ul class="scheduleLabels">
       <li v-for="(time, timeKey) in times" :class="{ late: timeKey > 17 }">
-        {{ fill2(timeKey + 1) }}교시<br/>
+        {{ fill2(timeKey + 1) }}교시<br />
         {{ time }}
       </li>
     </ul>
@@ -72,7 +65,9 @@ const colors = [
       >
         <div
           class="inner"
-          v-for="({ lecture, range, room }, lectureKey) in [ getSchedule(key, timeKey + 1) ].filter(Boolean)"
+          v-for="({ lecture, range, room }, lectureKey) in [
+            getSchedule(key, timeKey + 1),
+          ].filter(Boolean)"
           :key="lectureKey"
           @click.stop="handleRemove"
           :style="{
@@ -80,10 +75,15 @@ const colors = [
             backgroundColor: getColor(lecture),
           }"
         >
-          <el-popconfirm title="강의를 삭제하시겠습니까?" @confirm="removeSchedule(key, timeKey + 1)">
+          <el-popconfirm
+            title="강의를 삭제하시겠습니까?"
+            @confirm="removeSchedule(key, timeKey + 1)"
+          >
             <template #reference>
               <p>
-                <strong>{{ lecture.subjKnm }}{{ lecture.cybLtrTyNm || '' }}</strong><br/>
+                <strong
+                  >{{ lecture.subjKnm }}{{ lecture.cybLtrTyNm || "" }}</strong
+                ><br />
                 <strong>{{ lecture.wkLecrEmpnm }}</strong> {{ room }}
               </p>
             </template>
@@ -102,6 +102,10 @@ header {
   top: 0;
   height: 40px;
   border-bottom: 1px solid #bbb;
+
+  .el-popup-parent--hidden & {
+    right: 17px;
+  }
 
   ul {
     display: flex;

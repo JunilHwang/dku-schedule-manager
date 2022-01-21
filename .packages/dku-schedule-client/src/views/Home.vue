@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import {ScheduleController, ScheduleTable} from "@/components";
-import {computed, ComputedRef, reactive, Ref, ref, watchEffect} from "vue";
-import {useRoute, useRouter} from "vue-router";
-import {ElMessage} from "element-plus";
+import { computed, ComputedRef, reactive, Ref, ref, watchEffect } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
 
-import {Lecture, Schedule, scheduleService} from "@/services";
-import {days, times} from "@/properties";
-import {getAtStorage, saveAtStorage} from "@/utils";
+import { ScheduleController, ScheduleTable } from "@/components";
+
+import { Lecture, Schedule, scheduleService } from "@/services";
+import { days, times } from "@/properties";
+import { getAtStorage, saveAtStorage } from "@/utils";
 
 const route = useRoute();
 const router = useRouter();
@@ -22,12 +23,13 @@ const semester: ComputedRef<number> = computed(() =>
 const searching = ref(false);
 
 const myLectures: Ref<Lecture[]> = ref(
-  getAtStorage(`${year.value}-${semester.value}`)
+  JSON.parse((route.query.init || "null") as string) ||
+    getAtStorage(`${year.value}-${semester.value}`)
 );
 
 const lectureToSchedule = (lecture: Lecture): Schedule[] =>
   lecture.buldAndRoomCont.split("<p>").map((timeAndRoom) => {
-    const dayIndex = days.findIndex((day) => timeAndRoom.includes(day))
+    const dayIndex = days.findIndex((day) => timeAndRoom.includes(day));
     const reg = /^([가-힣])(\d+(~\d+)?)(.*)/;
     const range = [timeAndRoom.replace(reg, "$2")].map((v) => {
       const [start, end] = v.split("~").map(Number);
@@ -36,20 +38,20 @@ const lectureToSchedule = (lecture: Lecture): Schedule[] =>
         .fill(start)
         .map((v, k) => v + k);
     })[0] as number[];
-    const room = timeAndRoom.replace(reg, "$4")?.replace(/\(|\)/g, '');
+    const room = timeAndRoom.replace(reg, "$4")?.replace(/\(|\)/g, "");
 
     return {
       lecture,
       dayIndex,
       range,
       room,
-    }
+    };
   });
 
 const schedules = computed(() => {
   return myLectures.value
-    .filter(({buldAndRoomCont}) => Boolean(buldAndRoomCont))
-    .filter(({buldAndRoomCont}) =>
+    .filter(({ buldAndRoomCont }) => Boolean(buldAndRoomCont))
+    .filter(({ buldAndRoomCont }) =>
       days.filter((day) => buldAndRoomCont.includes(day))
     )
     .flatMap(lectureToSchedule);
@@ -85,7 +87,7 @@ const $main = ref(null);
 const pageSize = 50;
 
 const majors: ComputedRef<string[]> = computed(() => [
-  ...new Set(searchOptions.lectures.map(({tkcrsEcaOrgnm}) => tkcrsEcaOrgnm)),
+  ...new Set(searchOptions.lectures.map(({ tkcrsEcaOrgnm }) => tkcrsEcaOrgnm)),
 ]);
 
 async function fetchLectures() {
@@ -122,7 +124,7 @@ function handleSelectDayAndTime(day: string, timeKey: number) {
 function handleSelectSemester(value: string) {
   const [year, semester] = value.split("-");
   router.push({
-    query: {year, semester},
+    query: { year, semester },
   });
   myLectures.value = getAtStorage(`${year}-${semester}`);
   requestAnimationFrame(fetchLectures);
@@ -137,7 +139,7 @@ function handleSearchOptionChange() {
 
 function handleSelectLecture(lecture: Lecture) {
   const schedule = lectureToSchedule(lecture);
-  const duplicated = schedules.value.find(({range, dayIndex}) => {
+  const duplicated = schedules.value.find(({ range, dayIndex }) => {
     return schedule.find((v) => {
       return (
         v.dayIndex === dayIndex && v.range.find((time) => range.includes(time))
@@ -163,7 +165,7 @@ function handleRemoveSchedule(schedule: Schedule) {
 }
 
 function fetchNextData() {
-  const {grades, lectures, days, times, query, currentLectures, majors} =
+  const { grades, lectures, days, times, query, currentLectures, majors } =
     searchOptions;
 
   searchOptions.page += 1;
@@ -173,7 +175,7 @@ function fetchNextData() {
   for (; cursor < lectures.length; cursor += 1) {
     if (arr.length >= pageSize) break;
     const lecture = lectures[cursor];
-    const {grade, buldAndRoomCont, subjKnm, tkcrsEcaOrgnm} = lecture;
+    const { grade, buldAndRoomCont, subjKnm, tkcrsEcaOrgnm } = lecture;
 
     if (query.length !== 0 && !subjKnm.includes(query)) {
       continue;
@@ -220,15 +222,37 @@ function fetchNextData() {
   currentLectures.push(...arr);
 }
 
+function handleShare() {
+  const qs = Object.entries({
+    year: year.value,
+    semester: semester.value,
+    init: JSON.stringify(myLectures.value),
+  })
+    .map(([k, v]) => `${k}=${v}`)
+    .join("&");
+
+  const $textarea = document.createElement("textarea");
+  document.body.append($textarea);
+  $textarea.value = `${location.origin}/dku-schedule-manager/?${qs}`;
+  $textarea.select();
+  document.execCommand("copy");
+  $textarea.remove();
+  ElMessage.success("시간표 주소를 복사했습니다.");
+}
+
+function handleDownload() {
+  console.log("handleDownload");
+}
+
 fetchLectures();
 
 watchEffect(() => {
   if (!$table.value) return;
-  const {$el} = $table.value as any;
+  const { $el } = $table.value as any;
   $el
     .querySelector(".el-table__body-wrapper")
-    .addEventListener("scroll", ({target}: { target: HTMLElement }) => {
-      const {scrollHeight, clientHeight, scrollTop} = target;
+    .addEventListener("scroll", ({ target }: { target: HTMLElement }) => {
+      const { scrollHeight, clientHeight, scrollTop } = target;
       if (scrollHeight - scrollTop - clientHeight > 500) return;
       fetchNextData();
     });
@@ -248,6 +272,8 @@ watchEffect(() => {
       :semester="semester"
       @select-semester="handleSelectSemester"
       @search="openSearch"
+      @share="handleShare"
+      @download="handleDownload"
     />
 
     <el-dialog v-model="searching" title="시간표 검색" width="900px">
@@ -287,7 +313,7 @@ watchEffect(() => {
           <el-select-v2
             v-model="searchOptions.majors"
             :options="
-              majors.map(v => ({
+              majors.map((v) => ({
                 value: v,
                 label: v.split('<p>').join(' '),
               }))
@@ -300,7 +326,7 @@ watchEffect(() => {
         </el-form-item>
 
         <el-form-item label="수업명" size="small">
-          <el-input v-model="searchOptions.query"/>
+          <el-input v-model="searchOptions.query" />
         </el-form-item>
       </el-form>
 
@@ -329,13 +355,13 @@ watchEffect(() => {
           </template>
         </el-table-column>
 
-        <el-table-column label="교과목" property="subjId" width="80px"/>
+        <el-table-column label="교과목" property="subjId" width="80px" />
 
-        <el-table-column label="교과목명" property="subjKnm" width="150px"/>
+        <el-table-column label="교과목명" property="subjKnm" width="150px" />
 
         <el-table-column property="crd" width="60px" align="center">
           <template #header>
-            <div style="line-height: 1">학점<br/>(설계)</div>
+            <div style="line-height: 1">학점<br />(설계)</div>
           </template>
         </el-table-column>
 
@@ -348,7 +374,7 @@ watchEffect(() => {
 
         <el-table-column label="요일/시간/강의실" width="130px">
           <template #default="{ row }">
-            <div style="line-height: 1" v-html="row.buldAndRoomCont"/>
+            <div style="line-height: 1" v-html="row.buldAndRoomCont" />
           </template>
         </el-table-column>
 
@@ -368,7 +394,7 @@ watchEffect(() => {
                     .join(',')
                 "
               />
-              <p v-html="row.tkcrsEcaOrgnm.split('<p>').join(' ')"/>
+              <p v-html="row.tkcrsEcaOrgnm.split('<p>').join(' ')" />
             </div>
           </template>
         </el-table-column>

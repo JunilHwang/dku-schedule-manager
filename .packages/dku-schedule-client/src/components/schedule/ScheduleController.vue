@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Search } from "@element-plus/icons-vue";
+import { Download, Search, Share } from "@element-plus/icons-vue";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 
@@ -16,7 +16,7 @@ const conditions = [
   { label: "2021년 2학기", value: "2021-2" },
 ];
 
-const emit = defineEmits(["select-semester", "search"]);
+const emit = defineEmits(["select-semester", "search", "share", "download"]);
 </script>
 
 <template>
@@ -25,6 +25,7 @@ const emit = defineEmits(["select-semester", "search"]);
       <el-button :icon="Search" @click="emit('search')" round plain>
         검색
       </el-button>
+
       <el-button
         v-for="{ label, value } in conditions"
         :type="value === condition ? 'primary' : 'default'"
@@ -33,6 +34,34 @@ const emit = defineEmits(["select-semester", "search"]);
       >
         {{ label }}
       </el-button>
+    </el-button-group>
+
+    <el-button-group class="shares">
+      <el-popover
+        placement="top-start"
+        :width="200"
+        trigger="hover"
+        content="클립보드에 시간표 URL을 복사합니다."
+      >
+        <template #reference>
+          <el-button @click="emit('share')" :icon="Share" round plain>
+            시간표 공유
+          </el-button>
+        </template>
+      </el-popover>
+
+      <el-popover
+        placement="top-start"
+        :width="200"
+        trigger="hover"
+        content="시간표 이미지를 다운로드합니다."
+      >
+        <template #reference>
+          <el-button @click="emit('download')" :icon="Download" round plain>
+            다운로드
+          </el-button>
+        </template>
+      </el-popover>
     </el-button-group>
   </div>
 </template>
@@ -45,5 +74,9 @@ const emit = defineEmits(["select-semester", "search"]);
   bottom: 30px;
   display: flex;
   justify-content: center;
+}
+
+.shares {
+  margin-left: 10px;
 }
 </style>
