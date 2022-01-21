@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { Home } from "../views";
+import { Home, Shared } from "../views";
 
 export const router = createRouter({
   history: createWebHistory("/dku-schedule-manager"),
@@ -8,6 +8,11 @@ export const router = createRouter({
       path: "/",
       name: "Home",
       component: Home,
+    },
+    {
+      path: "/shared",
+      name: "Shared",
+      component: Shared,
     },
   ],
 });

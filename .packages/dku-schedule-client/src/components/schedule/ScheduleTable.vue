@@ -8,6 +8,7 @@ import { Lecture, Schedule } from "@/services";
 
 const props = defineProps<{
   schedules: Schedule[];
+  shared?: boolean;
 }>();
 
 const { schedules } = toRefs(props);

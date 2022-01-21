@@ -26,3 +26,29 @@ export const saveAtStorage = (key: string, data: Lecture[]) => {
 export const getAtStorage = (key: string): Lecture[] => {
   return JSON.parse(localStorage.getItem(key) || "[]");
 };
+
+export const lectureToSchedule = (lecture: Lecture): Schedule[] =>
+  lecture.buldAndRoomCont.split("<p>").map((timeAndRoom) => {
+    const dayIndex = ["월", "화", "수", "목", "금", "토"].findIndex((day) =>
+      timeAndRoom.includes(day)
+    );
+
+    const reg = /^([가-힣])(\d+(~\d+)?)(.*)/;
+
+    const range = [timeAndRoom.replace(reg, "$2")].map((v) => {
+      const [start, end] = v.split("~").map(Number);
+      if (end === undefined) return [start];
+      return Array(end - start + 1)
+        .fill(start)
+        .map((v, k) => v + k);
+    })[0] as number[];
+
+    const room = timeAndRoom.replace(reg, "$4")?.replace(/\(|\)/g, "");
+
+    return {
+      lecture,
+      dayIndex,
+      range,
+      room,
+    };
+  });

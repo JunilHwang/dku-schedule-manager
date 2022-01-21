@@ -7,7 +7,7 @@ import { ScheduleController, ScheduleTable } from "@/components";
 
 import { Lecture, Schedule, scheduleService } from "@/services";
 import { days, times } from "@/properties";
-import { getAtStorage, saveAtStorage } from "@/utils";
+import { getAtStorage, saveAtStorage, lectureToSchedule } from "@/utils";
 
 const route = useRoute();
 const router = useRouter();
@@ -23,30 +23,8 @@ const semester: ComputedRef<number> = computed(() =>
 const searching = ref(false);
 
 const myLectures: Ref<Lecture[]> = ref(
-  JSON.parse((route.query.init || "null") as string) ||
-    getAtStorage(`${year.value}-${semester.value}`)
+  getAtStorage(`${year.value}-${semester.value}`)
 );
-
-const lectureToSchedule = (lecture: Lecture): Schedule[] =>
-  lecture.buldAndRoomCont.split("<p>").map((timeAndRoom) => {
-    const dayIndex = days.findIndex((day) => timeAndRoom.includes(day));
-    const reg = /^([가-힣])(\d+(~\d+)?)(.*)/;
-    const range = [timeAndRoom.replace(reg, "$2")].map((v) => {
-      const [start, end] = v.split("~").map(Number);
-      if (end === undefined) return [start];
-      return Array(end - start + 1)
-        .fill(start)
-        .map((v, k) => v + k);
-    })[0] as number[];
-    const room = timeAndRoom.replace(reg, "$4")?.replace(/\(|\)/g, "");
-
-    return {
-      lecture,
-      dayIndex,
-      range,
-      room,
-    };
-  });
 
 const schedules = computed(() => {
   return myLectures.value
@@ -223,17 +201,10 @@ function fetchNextData() {
 }
 
 function handleShare() {
-  const qs = Object.entries({
-    year: year.value,
-    semester: semester.value,
-    init: JSON.stringify(myLectures.value),
-  })
-    .map(([k, v]) => `${k}=${v}`)
-    .join("&");
-
+  const init = JSON.stringify(myLectures.value);
   const $textarea = document.createElement("textarea");
   document.body.append($textarea);
-  $textarea.value = `${location.origin}/dku-schedule-manager/?${qs}`;
+  $textarea.value = `${location.origin}/dku-schedule-manager/shared/?init=${init}`;
   $textarea.select();
   document.execCommand("copy");
   $textarea.remove();
