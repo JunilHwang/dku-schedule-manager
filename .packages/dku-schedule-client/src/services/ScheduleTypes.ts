@@ -36,4 +36,5 @@ export interface Schedule {
   lecture: Lecture;
   dayIndex: number;
   range: number[];
+  room?: string;
 }

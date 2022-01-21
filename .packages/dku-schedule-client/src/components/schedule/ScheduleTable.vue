@@ -1,46 +1,49 @@
 <script setup lang="ts">
-import { toRefs } from "vue";
-import { ElMessageBox, ElMessage } from "element-plus";
+import {toRefs} from "vue";
+import {ElMessage} from "element-plus";
 
-import { fill2 } from "@/utils";
-import { days, times } from "@/properties";
-import { Lecture, Schedule } from "@/services";
+import {fill2} from "@/utils";
+import {days, times} from "@/properties";
+import {Lecture, Schedule} from "@/services";
 
 const props = defineProps<{
   schedules: Schedule[];
 }>();
 
-const { schedules } = toRefs(props);
+const {schedules} = toRefs(props);
 const emit = defineEmits(["select", "remove"]);
 
 function getSchedule(day: number, time: number): Schedule | undefined {
   return schedules.value.find(
-    ({ dayIndex, range }) => dayIndex === day && range.includes(time)
+    ({dayIndex, range}) => dayIndex === day && range[0] === time
   );
 }
 
-function getLecture(day: number, time: number): Lecture[] {
-  const selected = getSchedule(day, time);
-  return [selected?.lecture].filter(Boolean) as Lecture[];
+function getColor(lecture: Lecture): string {
+  const lectures = [ ...new Set(schedules.value.map(({ lecture }) => lecture)) ]
+  return colors[lectures.indexOf(lecture) % colors.length];
+}
+
+function handleRemove({ target }: { target: HTMLElement }) {
+  const [ $confirm ] =  Array.from(target.children) as HTMLElement[];
+  if (!$confirm) return;
+  $confirm.click();
 }
 
 function removeSchedule(day: number, time: number) {
   const selected = getSchedule(day, time)!;
-  ElMessageBox.confirm(
-    `시간표에서 ${selected.lecture.subjKnm}를 삭제하시겠습니까?`,
-    "삭제",
-    {
-      confirmButtonText: "삭제",
-      cancelButtonText: "취소",
-      type: "warning",
-    }
-  )
-    .then(() => {
-      emit("remove", selected);
-      ElMessage.success("삭제되었습니다.");
-    })
-    .catch(() => ElMessage.info("취소되었습니다."));
+  emit("remove", selected);
+  ElMessage.success("삭제되었습니다.");
 }
+
+const colors = [
+  '#fdd',
+  '#ffd',
+  '#dff',
+  '#ddf',
+  '#fdf',
+  '#dfd',
+]
 </script>
 
 <template>
@@ -50,14 +53,14 @@ function removeSchedule(day: number, time: number) {
         <span>교시</span>
       </li>
       <li v-for="day in days" :key="day">
-        <span v-html="day" />
+        <span v-html="day"/>
       </li>
     </ul>
   </header>
   <div class="wrap">
     <ul class="scheduleLabels">
       <li v-for="(time, timeKey) in times" :class="{ late: timeKey > 17 }">
-        {{ fill2(timeKey + 1) }}교시<br />
+        {{ fill2(timeKey + 1) }}교시<br/>
         {{ time }}
       </li>
     </ul>
@@ -68,17 +71,23 @@ function removeSchedule(day: number, time: number) {
         @click="emit('select', day, timeKey + 1)"
       >
         <div
-          v-for="(lecture, lectureKey) in getLecture(key, timeKey + 1)"
+          class="inner"
+          v-for="({ lecture, range, room }, lectureKey) in [ getSchedule(key, timeKey + 1) ].filter(Boolean)"
           :key="lectureKey"
-          @click.stop="removeSchedule(key, timeKey + 1)"
+          @click.stop="handleRemove"
+          :style="{
+            height: `${range.length * 100 + range.length}%`,
+            backgroundColor: getColor(lecture),
+          }"
         >
-          <p>
-            <template v-if="lecture.cybLtrTyNm">
-              {{ lecture.cybLtrTyNm }}
+          <el-popconfirm title="강의를 삭제하시겠습니까?" @confirm="removeSchedule(key, timeKey + 1)">
+            <template #reference>
+              <p>
+                <strong>{{ lecture.subjKnm }}{{ lecture.cybLtrTyNm || '' }}</strong><br/>
+                <strong>{{ lecture.wkLecrEmpnm }}</strong> {{ room }}
+              </p>
             </template>
-            {{ lecture.subjKnm }}<br />
-            [{{ lecture.wkLecrEmpnm }}]
-          </p>
+          </el-popconfirm>
         </div>
       </li>
     </ul>
@@ -148,16 +157,17 @@ header {
 
     &.instance {
       li {
+        display: block;
         cursor: pointer;
-        font-size: 11px;
+        font-size: 13px;
 
-        > div {
+        .inner {
+          position: relative;
           width: 100%;
-          height: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          text-align: center;
+          min-height: 100%;
+          box-sizing: border-box;
+          padding: 10px;
+          background: #fff;
         }
 
         &:hover {
