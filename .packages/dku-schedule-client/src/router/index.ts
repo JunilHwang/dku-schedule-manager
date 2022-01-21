@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import { Home } from "../views";
 
 export const router = createRouter({
-  history: createWebHistory("/dku-schdule-manager"),
+  history: createWebHistory("/dku-schedule-manager"),
   routes: [
     {
       path: "/",
