@@ -371,8 +371,6 @@ watchEffect(() => {
 
 <style>
 main {
-  height: calc(100% - 20px);
-  margin: 10px;
-  border: 1px solid #bbb;
+  height: 100%;
 }
 </style>

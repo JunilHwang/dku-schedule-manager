@@ -87,6 +87,11 @@ function removeSchedule(day: number, time: number) {
 
 <style lang="scss">
 header {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 40px;
   border-bottom: 1px solid #bbb;
 
   ul {
@@ -118,8 +123,7 @@ header {
 
 .wrap {
   display: flex;
-  overflow: auto;
-  height: calc(100% - 41px);
+  margin-top: 41px;
 
   ul {
     width: 10%;
