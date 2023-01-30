@@ -14,7 +14,7 @@ const route = useRoute();
 const router = useRouter();
 
 const year: ComputedRef<number> = computed(() =>
-  Number(route.query.year || 2022)
+  Number(route.query.year || 2023)
 );
 
 const semester: ComputedRef<number> = computed(() =>
