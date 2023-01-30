@@ -13,7 +13,8 @@ const props = defineProps({
 const condition = computed(() => `${props.year}-${props.semester}`);
 const conditions = [
   { label: "2022년 1학기", value: "2022-1" },
-  { label: "2021년 2학기", value: "2021-2" },
+  { label: "2022년 2학기", value: "2022-2" },
+  { label: "2023년 1학기", value: "2023-1" },
 ];
 
 const emit = defineEmits(["select-semester", "search", "share", "download"]);
