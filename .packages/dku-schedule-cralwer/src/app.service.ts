@@ -91,6 +91,31 @@ const payloadMap = parsePayloadToMap([
     qrySxn: 2,
     lesnPlcCd: 2,
   },
+
+  {
+    yy: 2023,
+    semCd: 1,
+    qrySxn: 1,
+    lesnPlcCd: 1,
+  },
+  {
+    yy: 2023,
+    semCd: 1,
+    qrySxn: 1,
+    lesnPlcCd: 2,
+  },
+  {
+    yy: 2023,
+    semCd: 1,
+    qrySxn: 2,
+    lesnPlcCd: 1,
+  },
+  {
+    yy: 2023,
+    semCd: 1,
+    qrySxn: 2,
+    lesnPlcCd: 2,
+  },
 ]);
 
 @Injectable()
